@@ -1,4 +1,4 @@
-use bi_polynomial::{calculate_points, interpolate_poly_scalar};
+use bi_polynomial::{calculate_point, interpolate_poly_scalar};
 use bls12_381_plus::elliptic_curve::hash2curve::ExpandMsgXmd;
 use bls12_381_plus::elliptic_curve::Group;
 use bls12_381_plus::{pairing, G1Affine, G1Projective, G2Affine, G2Projective, Scalar};
@@ -245,8 +245,8 @@ impl KzgCrs {
         p_set.push(Scalar::ZERO);
         hat_p_set.push(Scalar::ZERO);
         for index in 1..=n {
-            p_set.push(calculate_points(&coef, &vander_matrix[index]));
-            hat_p_set.push(calculate_points(&hat_coef, &vander_matrix[index]));
+            p_set.push(calculate_point(&coef, &vander_matrix[index]));
+            hat_p_set.push(calculate_point(&hat_coef, &vander_matrix[index]));
         }
         // In order to calculate the proof of a certain point, the parameter Tau is needed in the calculation, but this random number is not public.
         // Please refer to the paper for the detailed principles of the following steps.
@@ -275,8 +275,8 @@ impl KzgCrs {
         p_set.push(Scalar::ZERO);
         hat_p_set.push(Scalar::ZERO);
         for index in 1..=n {
-            p_set.push(calculate_points(&coef, &vander_matrix[index]));
-            hat_p_set.push(calculate_points(&hat_coef, &vander_matrix[index]));
+            p_set.push(calculate_point(&coef, &vander_matrix[index]));
+            hat_p_set.push(calculate_point(&hat_coef, &vander_matrix[index]));
         }
         let mut pi: Vec<G1Affine> = Vec::with_capacity(n + 1);
         pi.push(G1Affine::identity());

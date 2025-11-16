@@ -1,0 +1,8 @@
+[package]
+name = "adkg_zk_lib"
+version = "0.1.0"
+edition = "2021"
+
+[dev-dependencies]
+bi_polynomial = { path = "bi_polynomial" }
+zk_tool       = { path = "zk_tool" }
