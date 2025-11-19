@@ -1,1 +1,1 @@
-// 这个 crate 只用来挂集成测试，不放真正逻辑代码。
+// This crate is only used to attach integration tests, and does not contain the actual logic code.

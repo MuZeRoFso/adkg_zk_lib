@@ -6,3 +6,5 @@ edition = "2021"
 [dev-dependencies]
 bi_polynomial = { path = "bi_polynomial" }
 zk_tool       = { path = "zk_tool" }
+bls12_381_plus = "0.8"
+rand = "0.8"

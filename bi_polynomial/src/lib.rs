@@ -69,7 +69,7 @@ pub fn gen_polynomial_with_secret(
     (u_matrix, hat_u_matrix, init_vandermonde(t, n))
 }
 
-pub fn init_vandermonde(t: usize, n: usize) -> Vec<Vec<Scalar>> {
+fn init_vandermonde(t: usize, n: usize) -> Vec<Vec<Scalar>> {
     // Generates the (t+1) * n vandermonde matrix
     let mut vander_matrix: Vec<Vec<Scalar>> = Vec::with_capacity(n + 1);
     vander_matrix.push(vec![Scalar::ONE; t + 1]);
@@ -91,22 +91,22 @@ pub fn bi2alpha(
     vander_matrix: &Vec<Vec<Scalar>>,
     n: usize,
 ) -> (Vec<Vec<Scalar>>, Vec<Vec<Scalar>>) {
-    let d1 = matrix[0].len();
-    let d2 = matrix.len();
+    let t = matrix[0].len();
+    let f = matrix.len();
     let mut alpha_matrix: Vec<Vec<Scalar>> = Vec::with_capacity(n + 1);
     let mut hat_alpha_matrix: Vec<Vec<Scalar>> = Vec::with_capacity(n + 1);
     // To easily read the coefficients by index, fill in a coefficient 0 where the index is 0.
-    alpha_matrix.push(vec![Scalar::ZERO; d1]);
-    hat_alpha_matrix.push(vec![Scalar::ZERO; d1]);
+    alpha_matrix.push(vec![Scalar::ZERO; t]);
+    hat_alpha_matrix.push(vec![Scalar::ZERO; t]);
     // The vander matrix is used to compute the new polynomial distributed to each node.
     for i in 1..=n {
-        let mut alpha: Vec<Scalar> = Vec::with_capacity(d1 + 1);
-        let mut hat_alpha: Vec<Scalar> = Vec::with_capacity(d1 + 1);
+        let mut alpha: Vec<Scalar> = Vec::with_capacity(t + 1);
+        let mut hat_alpha: Vec<Scalar> = Vec::with_capacity(t + 1);
         let vander: &Vec<Scalar> = &vander_matrix[i];
-        for x in 0..d1 {
+        for x in 0..t {
             let mut coff: Scalar = Scalar::ZERO;
             let mut hat_coff: Scalar = Scalar::ZERO;
-            for y in 0..d2 {
+            for y in 0..f {
                 coff += matrix[y][x] * vander[y];
                 hat_coff += hat_matrix[y][x] * vander[y];
             }
@@ -121,15 +121,15 @@ pub fn bi2alpha(
 
 pub fn interpolate_poly_scalar(accept: &Vec<(Scalar, Scalar)>) -> Vec<Scalar> {
     // The polynomial of Scalar is computed using Lagrange interpolation.
-    let f = accept.len();
-    let mut accept_x: Vec<Scalar> = Vec::with_capacity(f);
-    for i in 0..f {
+    let t = accept.len();
+    let mut accept_x: Vec<Scalar> = Vec::with_capacity(t);
+    for i in 0..t {
         accept_x.push(accept[i].0);
     }
-    let l_i: Vec<Vec<Scalar>> = poly_l_x(f, &accept_x);
-    let mut coff: Vec<Scalar> = vec![Scalar::ZERO; f];
-    for i in 0..f {
-        for j in 0..f {
+    let l_i: Vec<Vec<Scalar>> = poly_l_x(t, &accept_x);
+    let mut coff: Vec<Scalar> = vec![Scalar::ZERO; t];
+    for i in 0..t {
+        for j in 0..t {
             coff[i] += l_i[j][i] * accept[j].1;
         }
     }
@@ -138,15 +138,15 @@ pub fn interpolate_poly_scalar(accept: &Vec<(Scalar, Scalar)>) -> Vec<Scalar> {
 
 pub fn interpolate_poly_g1(accept: &Vec<(Scalar, G1Projective)>) -> Vec<G1Projective> {
     // The polynomial of G1 is computed using Lagrange interpolation.
-    let f = accept.len();
-    let mut accept_x: Vec<Scalar> = Vec::with_capacity(f);
-    for i in 0..f {
+    let t = accept.len();
+    let mut accept_x: Vec<Scalar> = Vec::with_capacity(t);
+    for i in 0..t {
         accept_x.push(accept[i].0);
     }
-    let l_i = poly_l_x(f, &accept_x);
-    let mut coff: Vec<G1Projective> = vec![G1Projective::identity(); f];
-    for i in 0..f {
-        for j in 0..f {
+    let l_i = poly_l_x(t, &accept_x);
+    let mut coff: Vec<G1Projective> = vec![G1Projective::identity(); t];
+    for i in 0..t {
+        for j in 0..t {
             coff[i] += l_i[j][i] * accept[j].1;
         }
     }

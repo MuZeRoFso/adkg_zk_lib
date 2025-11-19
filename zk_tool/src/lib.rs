@@ -40,6 +40,7 @@ pub struct KzgCrsTransmit {
     sc2: Vec<u8>,    // Schnorr generator 2
 }
 
+#[derive(Debug)]
 pub struct SchnorrPi {
     u: G1Projective,       // Commitment
     c: Scalar,             // Challenge
@@ -413,8 +414,8 @@ impl KzgCrs {
     pub fn schnorr_verify(&self, pi: &SchnorrPi, hat_pi: &SchnorrPi) -> bool {
         // Verify that the Schnorr protocol proof is valid.
         let (mut bs, mut hat_bs): (BytesMut, BytesMut) = (BytesMut::new(), BytesMut::new());
-        bs.extend(self.g1.to_uncompressed());
-        hat_bs.extend(self.g2.to_uncompressed());
+        bs.extend(self.sc1.to_uncompressed());
+        hat_bs.extend(self.sc2.to_uncompressed());
         let (mut pk, mut hat_pk): (G1Projective, G1Projective) =
             (G1Projective::identity(), G1Projective::identity());
         for index in 0..pi.pk.len() {
@@ -427,7 +428,7 @@ impl KzgCrs {
         let c2 = Scalar::hash::<ExpandMsgXmd<Sha256>>(hat_bs.as_ref(), &hat_pi.u.to_uncompressed());
         c1.eq(&pi.c)
             && c2.eq(&hat_pi.c)
-            && (pi.r * self.g1).eq(&(pi.u + pi.c * pk))
-            && (hat_pi.r * self.g2).eq(&(hat_pi.u + hat_pi.c * hat_pk))
+            && (pi.r * self.sc1).eq(&(pi.u + pi.c * pk))
+            && (hat_pi.r * self.sc2).eq(&(hat_pi.u + hat_pi.c * hat_pk))
     }
 }
