@@ -40,12 +40,12 @@ pub struct KzgCrsTransmit {
     sc2: Vec<u8>,    // Schnorr generator 2
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct SchnorrPi {
     u: G1Projective,       // Commitment
     c: Scalar,             // Challenge
     r: Scalar,             // Reply
-    pk: Vec<G1Projective>, // A set of public key
+    pub pk: Vec<G1Projective>, // A set of public key
 }
 
 impl KzgCrs {

@@ -44,12 +44,12 @@ This will build the entire project and its dependencies.
 
 To run all the tests, use:
 ```bash
-cargo test
+cargo test --release -- --nocapture
 ```
 This command will automatically run all tests in the project.
 
 ### 3. Run Specific Module Tests
 ```bash
-cargo test --test test_avss
+cargo test --test test_adkg -- --nocapture
 ```
-Here, `test_avss` is the name of the integration test file. Modify it according to your actual file name.
+Here, `test_adkg` is the name of the integration test file. Modify it according to your actual file name.

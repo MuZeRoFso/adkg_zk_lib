@@ -4,7 +4,7 @@ use ff::Field;
 use rand::rngs::OsRng;
 
 pub fn gen_polynomial_random(
-    t: usize, // Threshold
+    t: usize, // Reconstruction Threshold
     f: usize, // Malicious Node
     n: usize, // Total number of nodes
 ) -> (Vec<Vec<Scalar>>, Vec<Vec<Scalar>>, Vec<Vec<Scalar>>) {
