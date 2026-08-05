@@ -5,7 +5,7 @@ use zk_tool::*;
 #[test]
 fn test_m_schnorr() {
     let (n, t, f, m): (usize, usize, usize, usize) = (16, 5, 5, 2);
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     // Initialize Schnorr's CRS
     let sc_crs = KzgCrs::setup(t, f, n, "Test1", "Test2", "Test3", "Test4");
     // Randomly select a set of z and hat_z

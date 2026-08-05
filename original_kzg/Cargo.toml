@@ -1,0 +1,10 @@
+[package]
+name = "original_kzg"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bi_polynomial = { path = "../bi_polynomial" }
+zk_tool       = { path = "../zk_tool" }
+bls12_381_plus = "0.9"
+rand = "0.10"

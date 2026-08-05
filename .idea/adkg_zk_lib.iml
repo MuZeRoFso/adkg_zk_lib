@@ -8,11 +8,15 @@
       <sourceFolder url="file://$MODULE_DIR$/intergrationTest/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/zk_tool/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/original_kzg/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/origin_schnorr/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/Tests/target" />
       <excludeFolder url="file://$MODULE_DIR$/bi_polynomial/target" />
       <excludeFolder url="file://$MODULE_DIR$/intergrationTest/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
       <excludeFolder url="file://$MODULE_DIR$/zk_tool/target" />
+      <excludeFolder url="file://$MODULE_DIR$/original_kzg/target" />
+      <excludeFolder url="file://$MODULE_DIR$/origin_schnorr/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -1,10 +1,9 @@
 use bi_polynomial::{calculate_point, interpolate_poly_scalar};
-use bls12_381_plus::elliptic_curve::hash2curve::ExpandMsgXmd;
-use bls12_381_plus::elliptic_curve::Group;
+use bls12_381_plus::elliptic_curve_013::hash2curve::ExpandMsgXmd;
+use bls12_381_plus::elliptic_curve_013::Group;
 use bls12_381_plus::{pairing, G1Affine, G1Projective, G2Affine, G2Projective, Scalar};
 use bytes::BytesMut;
 use ff::Field;
-use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::ops::Neg;
@@ -40,11 +39,11 @@ pub struct KzgCrsTransmit {
     sc2: Vec<u8>,    // Schnorr generator 2
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct SchnorrPi {
-    u: G1Projective,       // Commitment
-    c: Scalar,             // Challenge
-    r: Scalar,             // Reply
+    u: G1Projective,           // Commitment
+    c: Scalar,                 // Challenge
+    r: Scalar,                 // Reply
     pub pk: Vec<G1Projective>, // A set of public key
 }
 
@@ -59,7 +58,7 @@ impl KzgCrs {
         msg_sc: &str,
         dst_sc: &str,
     ) -> Self {
-        let mut rng = OsRng;
+        let mut rng = rand::rng();
         // Select two generators.
         let g1 = G1Projective::GENERATOR;
         let g2 = G1Projective::hash::<ExpandMsgXmd<Sha256>>(msg_zk.as_ref(), dst_zk.as_ref());
@@ -371,7 +370,7 @@ impl KzgCrs {
         // Generate non-interactive Schnorr proofs.
         // m is the total number of generated public and private key pairs.
         let m = z.len();
-        let mut rng = OsRng;
+        let mut rng = rand::rng();
         let (r1, r2) = (Scalar::random(&mut rng), Scalar::random(&mut rng));
         let (u1, u2) = (r1 * self.sc1, r2 * self.sc2);
         let (mut pk_z, mut pk_hat_z): (Vec<G1Projective>, Vec<G1Projective>) =

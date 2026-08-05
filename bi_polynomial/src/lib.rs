@@ -1,7 +1,7 @@
 use bls12_381_plus::elliptic_curve::Group;
 use bls12_381_plus::{G1Projective, Scalar};
 use ff::Field;
-use rand::rngs::OsRng;
+use rand;
 
 pub fn gen_polynomial_random(
     t: usize, // Reconstruction Threshold
@@ -9,7 +9,7 @@ pub fn gen_polynomial_random(
     n: usize, // Total number of nodes
 ) -> (Vec<Vec<Scalar>>, Vec<Vec<Scalar>>, Vec<Vec<Scalar>>) {
     // Initialize the random number generator.
-    let mut rng = OsRng;
+    let mut rng = rand::rng();
     // Initialize the coefficient matrix.
     let mut u_matrix: Vec<Vec<Scalar>> = Vec::with_capacity(f + 1);
     let mut hat_u_matrix: Vec<Vec<Scalar>> = Vec::with_capacity(f + 1);
@@ -37,7 +37,7 @@ pub fn gen_polynomial_with_secret(
     secret: &Vec<Scalar>, // A list of secrets to hide
 ) -> (Vec<Vec<Scalar>>, Vec<Vec<Scalar>>, Vec<Vec<Scalar>>) {
     // Using secrets to complete the generation of polynomials.
-    let mut rng = OsRng;
+    let mut rng = rand::rng();
     let m = secret.len();
     let mut u_matrix: Vec<Vec<Scalar>> = Vec::with_capacity(f + 1);
     let mut hat_u_matrix: Vec<Vec<Scalar>> = Vec::with_capacity(f + 1);

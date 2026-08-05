@@ -229,7 +229,7 @@ fn pk_generator(
 fn random_unique_numbers(n: usize, count: usize) -> Vec<usize> {
     // Randomly generate count of IDs
     let mut numbers: Vec<usize> = (1..=n).collect();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     numbers.shuffle(&mut rng);
     numbers.truncate(count);
     numbers

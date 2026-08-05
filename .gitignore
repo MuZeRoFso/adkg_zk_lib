@@ -1,0 +1,11 @@
+# Rust 编译产物
+target/
+**/target/
+
+# 临时文件
+*.log
+*.tmp
+
+# IDE 配置，可按需忽略
+.idea/
+.vscode/
