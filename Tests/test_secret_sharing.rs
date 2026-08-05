@@ -94,7 +94,7 @@ fn test_bi_pcs(n: usize, t: usize, f: usize) {
     // then use `bi2alpha` to return an alpha matrix.
     let (u_matrix, hat_u_matrix, vander_matrix) =
         gen_polynomial_with_secret(t, f, n, &origin_secret);
-    let (alpha_matrix, hat_alpha_matrix) = bi2alpha(&u_matrix, &hat_u_matrix, &vander_matrix, N);
+    let (alpha_matrix, hat_alpha_matrix) = bi2alpha(&u_matrix, &hat_u_matrix, &vander_matrix, n);
     // Initialize KZG commitment CRS
     let kzg_crs = KzgCrs::setup(t, f, n, "Test1", "Test2", "Test1", "Test2");
 
