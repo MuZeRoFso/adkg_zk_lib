@@ -1,10 +1,9 @@
-use bi_polynomial::{calculate_point, interpolate_poly_scalar};
-use bls12_381_plus::elliptic_curve::hash2curve::ExpandMsgXmd;
-use bls12_381_plus::elliptic_curve::Group;
+use bi_polynomial::{calculate_point, interpolate_poly_g1, interpolate_poly_scalar};
+use bls12_381_plus::elliptic_curve_013::hash2curve::ExpandMsgXmd;
+use bls12_381_plus::elliptic_curve_013::Group;
 use bls12_381_plus::{pairing, G1Affine, G1Projective, G2Affine, G2Projective, Scalar};
 use bytes::BytesMut;
 use ff::Field;
-use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::ops::Neg;
@@ -40,7 +39,7 @@ pub struct KzgCrsTransmit {
     sc2: Vec<u8>,    // Schnorr generator 2
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct SchnorrPi {
     u: G1Projective,       // Commitment
     c: Scalar,             // Challenge
@@ -59,7 +58,7 @@ impl KzgCrs {
         msg_sc: &str,
         dst_sc: &str,
     ) -> Self {
-        let mut rng = OsRng;
+        let mut rng = rand::rng();
         // Select two generators.
         let g1 = G1Projective::GENERATOR;
         let g2 = G1Projective::hash::<ExpandMsgXmd<Sha256>>(msg_zk.as_ref(), dst_zk.as_ref());
@@ -230,6 +229,14 @@ impl KzgCrs {
         }
         cm
     }
+    /// Evaluate the bivariate commitment at any Y coordinate, including Y = -l for packed-secret reconstruction.
+    pub fn divide_com_at(&self, com: &[G1Projective], y: &Scalar) -> G1Projective {
+        com.iter()
+            .rev()
+            .fold(G1Projective::identity(), |value, coefficient| {
+                value * *y + *coefficient
+            })
+    }
 
     pub fn eval(
         &self,
@@ -298,6 +305,64 @@ impl KzgCrs {
         }
         (p_set, hat_p_set, pi)
     }
+    pub fn eval_beta(
+        &self,
+        accept: &[(Scalar, G1Projective)],
+        targets: &[Scalar],
+    ) -> Vec<G1Affine> {
+        assert_eq!(accept.len(), self.f + 1, "expected f + 1 verified proofs");
+        for (index, (x, _)) in accept.iter().enumerate() {
+            assert!(
+                accept[..index].iter().all(|(other, _)| other != x),
+                "proof coordinates must be distinct"
+            );
+        }
+        let coefficients = interpolate_poly_g1(&accept.to_vec());
+        targets
+            .iter()
+            .map(|y| {
+                let proof = coefficients
+                    .iter()
+                    .rev()
+                    .fold(G1Projective::identity(), |value, coefficient| {
+                        value * *y + *coefficient
+                    });
+                G1Affine::from(proof)
+            })
+            .collect()
+    }
+
+    pub fn verify_exp(
+        &self,
+        cm: &[G1Projective],
+        i: usize,
+        j: usize,
+        g_p: &G1Projective,
+        hat_g_hat_p: &G1Projective,
+        pi: &G1Affine,
+    ) -> bool {
+        match cm.get(j) {
+            Some(commitment) => {
+                self.verify_exp_at(commitment, &Scalar::from(i as u64), g_p, hat_g_hat_p, pi)
+            }
+            None => false,
+        }
+    }
+
+    pub fn verify_exp_at(
+        &self,
+        commitment: &G1Projective,
+        x: &Scalar,
+        g_p: &G1Projective,
+        hat_g_hat_p: &G1Projective,
+        pi: &G1Affine,
+    ) -> bool {
+        let cm_p = G1Affine::from(*commitment - *g_p - *hat_g_hat_p);
+        let h = G2Affine::from(self.h);
+        let h_tau_x = G2Affine::from(self.h_tau - self.h * *x);
+        pairing(&cm_p, &h) == pairing(pi, &h_tau_x)
+    }
+    
     pub fn verify(
         &self,
         cm: &Vec<G1Projective>,
@@ -371,7 +436,7 @@ impl KzgCrs {
         // Generate non-interactive Schnorr proofs.
         // m is the total number of generated public and private key pairs.
         let m = z.len();
-        let mut rng = OsRng;
+        let mut rng = rand::rng();
         let (r1, r2) = (Scalar::random(&mut rng), Scalar::random(&mut rng));
         let (u1, u2) = (r1 * self.sc1, r2 * self.sc2);
         let (mut pk_z, mut pk_hat_z): (Vec<G1Projective>, Vec<G1Projective>) =
@@ -381,9 +446,6 @@ impl KzgCrs {
         bs.extend(self.sc1.to_uncompressed());
         hat_bs.extend(self.sc2.to_uncompressed());
         for index in 0..m {
-            // Sum the private key shares.
-            sum_z += z[index];
-            sum_hat_z += hat_z[index];
             // Compute the corresponding public key share for each private key share.
             pk_z.push(z[index] * self.sc1);
             pk_hat_z.push(hat_z[index] * self.sc2);
@@ -393,8 +455,18 @@ impl KzgCrs {
         }
         let c1 = Scalar::hash::<ExpandMsgXmd<Sha256>>(bs.as_ref(), &u1.to_uncompressed());
         let c2 = Scalar::hash::<ExpandMsgXmd<Sha256>>(hat_bs.as_ref(), &u2.to_uncompressed());
-        let r1 = r1 + c1 * sum_z;
-        let r2 = r2 + c2 * sum_hat_z;
+        let mut c1_pow=c1;
+        let mut c2_pow=c2;
+        for index in 0..m {
+            // Sum the private key shares.
+            sum_z += z[index]*c1_pow;
+            sum_hat_z += hat_z[index]*c2_pow;
+            c1_pow*=c1;
+            c2_pow*=c2;
+        }
+        
+        let r1 = r1 + sum_z;
+        let r2 = r2 + sum_hat_z;
         (
             SchnorrPi {
                 u: u1,
@@ -416,19 +488,25 @@ impl KzgCrs {
         let (mut bs, mut hat_bs): (BytesMut, BytesMut) = (BytesMut::new(), BytesMut::new());
         bs.extend(self.sc1.to_uncompressed());
         hat_bs.extend(self.sc2.to_uncompressed());
-        let (mut pk, mut hat_pk): (G1Projective, G1Projective) =
-            (G1Projective::identity(), G1Projective::identity());
         for index in 0..pi.pk.len() {
             bs.extend(pi.pk[index].to_uncompressed());
-            pk += pi.pk[index];
             hat_bs.extend(hat_pi.pk[index].to_uncompressed());
-            hat_pk += hat_pi.pk[index];
         }
         let c1 = Scalar::hash::<ExpandMsgXmd<Sha256>>(bs.as_ref(), &pi.u.to_uncompressed());
         let c2 = Scalar::hash::<ExpandMsgXmd<Sha256>>(hat_bs.as_ref(), &hat_pi.u.to_uncompressed());
-        c1.eq(&pi.c)
-            && c2.eq(&hat_pi.c)
-            && (pi.r * self.sc1).eq(&(pi.u + pi.c * pk))
-            && (hat_pi.r * self.sc2).eq(&(hat_pi.u + hat_pi.c * hat_pk))
+        if !c1.eq(&pi.c) || !c2.eq(&hat_pi.c){
+            println!("Schnorr Verify C failed");
+            return false;
+        }
+        let mut c1_pow=c1;
+        let mut c2_pow=c2;
+        let (mut pk, mut hat_pk): (G1Projective, G1Projective) = (pi.r*self.sc1, hat_pi.r*self.sc2);
+        for index in 0..pi.pk.len() {
+            pk -= pi.pk[index]*c1_pow;
+            hat_pk -= hat_pi.pk[index]*c2_pow;
+            c1_pow*=c1;
+            c2_pow*=c2;
+        }
+        pi.u.eq(&(pk)) && hat_pi.u.eq(&(hat_pk))
     }
 }
